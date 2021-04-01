@@ -5,15 +5,15 @@ In this sharing, instead of taking random examples like "Animals" or "Books" to 
 
 ## Problem statement
 
-There are 3 entities: **Question, Keywords and User Input**.
+There are 3 entities: **Question, User Input and Keywords**.
 
 1. A "Question" is just a question, something like "What are the things you can’t eat in the afternoon?", as simple as this.
 
 2. "User Input", is the answer provided by the user for the question, for example "I can't eat breakfast in the afternoon."
 
-3. "Keywords", is the way we evaluate if the user input is correct, for example: if we found "breakfast", correct answer; but if we found "lunch", wrong answer. Doing the keyword-matching is the most tricky part for this application. In this use case, we will have a "boolean" keywords, that comprises of "AND", "OR" and "NOT", and will be used to match the user input. An example of boolean keyword would look like that: ```(breakfast || dinner || supper) && !(lunch || brunch)```
+3. "Keywords", is the way we evaluate if the user input is correct, for example: if we found "breakfast", correct answer; but if we found "lunch", wrong answer. Doing the keyword-matching is the most tricky part for this application. In this use case, we will have a "boolean keywords", that comprises of "AND", "OR" and "NOT", and will be used to match the user input. An example of "boolean keywords" would look like that: ```(breakfast || dinner || supper) && !(lunch || brunch)```
 
-In short, we would need a method to evaluate if the user input matches the "boolean" keywords. To make things clear, check out the example below:
+In short, we would need a method to evaluate if the user input matches the "boolean keywords". To make things clear, check out the example below:
 
 *Who is the boy standing there?*
 - User input: He is John
@@ -69,7 +69,7 @@ func createStringMap(input string) Sentence {
 ```
 
 ### Keywords
-Next, the keywords. Let's look at the example of boolean keywords. It is basically "keyword" that lives between boolean operations. 
+Next, the keywords. Let's look at an example of "boolean keywords". It is basically "keyword" that lives between boolean operations. 
 ```
 (breakfast || dinner || supper) && !(lunch || brunch)
 ```
@@ -79,7 +79,7 @@ type Node interface {
 	Eval(input Sentence) bool
 }
 ```
-In order to implement the ```Node``` interface, all nodes need to have the ```Eval()``` method. Let's start with the implementation of a AND node.
+In order to implement the ```Node``` interface, all nodes need to have the ```Eval()``` method. Let's start with the implementation of AND node.
 <br>
 To define the AND node, we will have a ```ANDNode``` struct, with a ```Nodes``` field of type ```[]Node```. This is the field to store all the children nodes, and we will do ```&&``` operation on all of them in our ```Eval()``` function. Check out the implementation below:
 ```go
@@ -99,11 +99,42 @@ func (a *ANDNode) Eval(input Sentence) bool {
 	return result
 }
 ```
-Nothing fancy here, and the important part here is that our ANDNode, now implements the Node interface with its own ```Eval()``` defined. Besides, we have also defined a function, ```AND()``` to initialize the ANDNode. 
+Nothing fancy here, and the important part here is that our ANDNode, now implements the Node interface with its own ```Eval()``` defined. Besides, we have also defined a function, ```AND()``` to initialize the ```ANDNode```. 
 
-Moving forward to OR and NOT is very similar, except that they have different implementation of ```Eval()```. For ```NOTNode```, it will only accept a single children node, instead of a slice. I will not show the code here to make it too long here, you can check it in the ```booleantree``` package.
+Moving forward to OR and NOT is very similar, except that they have different implementation of ```Eval()```. For ```NOTNode```, it will only accept a single children node, instead of a slice. You can check this out in the ```booleantree``` package.
+```go
+// OR Implementation
+func OR(n ...Node) Node {
+	return &ORNode{n}
+}
 
-The last type of node needed, is the "keyword" node that does the actual implementation of keyword matching. We will define a type ```Word``` as a ```string```, and we already have the user input of type ```Sentence```, which is a HashMap. So, to check if the input hits any keyword, we would simply check if the ```Word```, exist in the ```Sentence```.
+type ORNode struct {
+	Nodes []Node
+}
+
+func (o *ORNode) Eval(input Sentence) bool {
+	result := false
+	for i := range o.Nodes {
+		result = result || o.Nodes[i].Eval(input)
+	}
+	return result
+}
+
+// NOT Implementation
+func NOT(n Node) Node {
+	return &NOTNode{n}
+}
+
+type NOTNode struct {
+	Node Node
+}
+
+func (n *NOTNode) Eval(input Sentence) bool {
+	return !n.Node.Eval(input)
+}
+```
+
+The last type of node, is the "keyword" node that does the actual implementation of keyword matching. We will define a type ```Word``` as a ```string```, and we already have the user input of type ```Sentence```, which is a HashMap. So, to check if the input hits any keyword, we would simply check if the ```Word```, exist in the ```Sentence```.
 
 ```go
 type Word string
@@ -115,7 +146,7 @@ func (w Word) Eval(input Sentence) bool {
 	return false
 }
 ```
-With this, we already have all the nodes to build our tree: AND, OR, NOT and Word. The nodes can further accept children nodes under them as they all implement the Node interface.
+With this, we already define all the nodes to build our tree: AND, OR, NOT and Word. The nodes can further accept children nodes under them as they all implement the ```Node``` interface.
 
 ## Results
 
@@ -129,10 +160,10 @@ keyword := bt.AND(
     ),
 )
 ```
-We can very easily make changes on the keyword logic, and we could also make it deeply nested with complicated logics with minimal effort. 
+We can very easily make changes on the keyword logic, and we could also make it deeply nested with complicated logics, all with minimal effort because we are using Interface. 
 
 
-Finally, to run the keyword matching, we will just initialize the user input as a ```Sentence``` and run the ```Eval()``` function to get a true/false evaluation.
+Finally, to run the keyword matching, we will initialize the user input as a ```Sentence``` and run the ```Eval()``` function to get a true/false evaluation.
 ```go
 userInput := "I can't eat breakfast and dinner in the afternoon"
 input := bt.NewSentence(userInput)
@@ -140,7 +171,7 @@ result := answer.Eval(input) // return true
 ```
 ![results](results.jpg)
 
-With this, I hope you have a clearer idea about implementing Go Interface, or at least learn something. There are edge cases such as whitespaces, punctuations, letter case etc, but I would not go into it as it is not the main point for this discussion.
+That's it, a practical implementation of Go Interface. With this, I hope you have a clearer idea about Go Interface and understand how powerful it is. In the code, there are edge cases that I did not take into account, such as whitespaces, punctuations, letter case etc, but I would not go into it as it is not the main point for this discussion.
 <br>
 
 Feel free to contact me if you found any issues, suggestions are welcomed. Thanks!
