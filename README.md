@@ -16,6 +16,7 @@ There are 3 entities: **Question, User Input and Keywords**.
 In short, we would need a method to evaluate if the user input matches the "boolean keywords". To make things clear, check out the example below:
 
 *Who is the boy standing there?*
+
 - User input: He is John
 - Keywords: (is && John) || (not && Jane)
 - Result: True *(Match “is && John”)*
@@ -99,7 +100,7 @@ func (a *ANDNode) Eval(input Sentence) bool {
 	return result
 }
 ```
-Nothing fancy here, and the important part here is that our ANDNode, now implements the Node interface with its own ```Eval()``` defined. Besides, we have also defined a function, ```AND()``` to initialize the ```ANDNode```. 
+Nothing fancy here, and the important part here is that our ```ANDNode```, now implements the ```Node``` interface with its own ```Eval()``` defined. Besides, we have also defined a function, ```AND()``` to initialize the ```ANDNode```. 
 
 Moving forward to OR and NOT is very similar, except that they have different implementation of ```Eval()```. For ```NOTNode```, it will only accept a single children node, instead of a slice. You can check this out in the ```booleantree``` package.
 ```go
